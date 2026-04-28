@@ -117,11 +117,13 @@ else:
     # ---------------------------
 
     # ---------------------------
-    # SLOT MACHINE DISPLAY WITH SPIN
+    # SLOT MACHINE DISPLAY WITH SPIN (FIXED)
     # ---------------------------
     st.write("### 🎰 Result")
 
     slot_placeholder = st.empty()
+
+    final_reel = None
 
     # fake spinning animation
     for _ in range(10):
@@ -130,21 +132,20 @@ else:
             f"<h1 style='text-align: center;'>{reel[0]} {reel[1]} {reel[2]}</h1>",
             unsafe_allow_html=True
         )
+        final_reel = reel  # keep last spin frame
         time.sleep(0.08)
 
-    # final result
+    # final result (NO extra random draw)
     if p < alpha:
         slot_placeholder.markdown(
             "<h1 style='text-align: center;'>⭐ ⭐ ⭐</h1>",
             unsafe_allow_html=True
         )
     else:
-        reel = np.random.choice(fruits, 3, replace=True)
         slot_placeholder.markdown(
-            f"<h1 style='text-align: center;'>{reel[0]} {reel[1]} {reel[2]}</h1>",
+            f"<h1 style='text-align: center;'>{final_reel[0]} {final_reel[1]} {final_reel[2]}</h1>",
             unsafe_allow_html=True
         )
-    
     # ---------------------------
     # RESULT TEXT
     # ---------------------------
