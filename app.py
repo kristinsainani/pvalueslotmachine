@@ -59,33 +59,18 @@ fruits = ["🍒", "🍋", "🍊", "🍇", "🍉", "⭐"]
 
 if st.button("🎲 Run Study", use_container_width=True):
 
-    if stop_early:
-        while True:
-            p, g1, g2, effect = run_experiment()
-            st.session_state.runs += 1
-            st.session_state.history.append(p)
-            if p < alpha:
-                st.session_state.significant += 1
-                break
-if multi_outcomes:
-    results = [run_experiment() for _ in range(5)]
-
-    # count ALL tests
-    for p, g1, g2, effect in results:
-        st.session_state.runs += 1
-        st.session_state.history.append(p)
-        if p < alpha:
-            st.session_state.significant += 1
-
-    # still display the "best" one (for slot machine drama)
-    p, g1, g2, effect = min(results, key=lambda x: x[0])
-
-else:
     p, g1, g2, effect = run_experiment()
+
     st.session_state.runs += 1
     st.session_state.history.append(p)
+
     if p < alpha:
         st.session_state.significant += 1
+
+    # ---------------------------
+    # SLOT MACHINE (SPIN)
+    # ---------------------------
+    st.write("### 🎰 Result")
 
     # ---------------------------
     # SLOT MACHINE (SPIN)
