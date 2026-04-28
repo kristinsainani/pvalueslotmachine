@@ -1,181 +1,150 @@
 import streamlit as st
 import numpy as np
-from scipy.stats import ttest_ind
 import matplotlib.pyplot as plt
+from scipy.stats import t
 
-# ---------------------------
-# PAGE SETUP
-# ---------------------------
-st.set_page_config(page_title="P-Value Slot Machine", layout="centered")
+st.set_page_config(page_title="CI + p-value Explorer", layout="wide")
 
-st.title("🎰 P-Value Slot Machine")
-st.write("Each spin = one experiment where there is NO real difference between groups.")
+st.title("Confidence Intervals and p-values: Same Story, Two Languages")
 
-# ---------------------------
-# SESSION STATE
-# ---------------------------
-if "runs" not in st.session_state:
-    st.session_state.runs = 0
-if "significant" not in st.session_state:
-    st.session_state.significant = 0
-if "history" not in st.session_state:
-    st.session_state.history = []
+st.write("""
+A confidence interval and a p-value are just two ways of answering the same question:
 
-# ---------------------------
-# SIDEBAR CONTROLS
-# ---------------------------
+**Does this study detect a difference?**
+
+- If the CI excludes 0 → p < alpha → “statistically significant”
+- If the CI includes 0 → p ≥ alpha → “not significant”
+""")
+
+# ---------------- Sidebar ----------------
 st.sidebar.header("Settings")
 
-n = st.sidebar.slider("Sample size per group", 5, 200, 30)
-alpha = st.sidebar.selectbox("Significance level (alpha)", [0.05, 0.01], index=0)
+confidence_level = st.sidebar.slider("Confidence level (%)", 80, 99, 95)
+sample_size = st.sidebar.slider("Sample size per group", 5, 200, 30)
+true_effect = st.sidebar.slider("True difference", -2.0, 2.0, 0.0, step=0.1)
 
-st.sidebar.write("### Flexible analysis choices")
-multi_outcomes = st.sidebar.checkbox("Try multiple outcomes (5 variables)")
-stop_early = st.sidebar.checkbox("Keep running until significant")
-drop_outliers = st.sidebar.checkbox("Drop outliers (|z| > 2.5)")
+mode = st.sidebar.radio("Mode", ["One study", "Many studies"])
 
-reset = st.sidebar.button("Reset")
+alpha = 1 - confidence_level / 100
 
-if reset:
-    st.session_state.runs = 0
-    st.session_state.significant = 0
-    st.session_state.history = []
-    st.rerun()
-
-# ---------------------------
-# FUNCTIONS
-# ---------------------------
-def simulate_once(n):
+# ---------------- Helper function ----------------
+def run_study(n, true_diff):
     g1 = np.random.normal(0, 1, n)
-    g2 = np.random.normal(0, 1, n)
-    return g1, g2
+    g2 = np.random.normal(true_diff, 1, n)
 
-def maybe_drop_outliers(x):
-    if not drop_outliers:
-        return x
-    z = (x - np.mean(x)) / np.std(x)
-    return x[np.abs(z) < 2.5]
+    diff = np.mean(g2) - np.mean(g1)
 
-def run_experiment():
-    def compute():
-        g1, g2 = simulate_once(n)
-        g1 = maybe_drop_outliers(g1)
-        g2 = maybe_drop_outliers(g2)
+    s1 = np.var(g1, ddof=1)
+    s2 = np.var(g2, ddof=1)
 
-        if len(g1) < 3 or len(g2) < 3:
-            return compute()
+    se = np.sqrt(s1/n + s2/n)
 
-        stat, p = ttest_ind(g1, g2, equal_var=False)
-        effect = np.mean(g1) - np.mean(g2)
-        return p, g1, g2, effect
+    df_num = (s1/n + s2/n)**2
+    df_den = ((s1/n)**2/(n-1)) + ((s2/n)**2/(n-1))
+    df = df_num / df_den
 
-    if multi_outcomes:
-        results = [compute() for _ in range(5)]
-        return min(results, key=lambda x: x[0])
-    else:
-        return compute()
+    t_stat = diff / se
+    p_value = 2 * (1 - t.cdf(abs(t_stat), df))
 
-# ---------------------------
-# RUN BUTTON
-# ---------------------------
-if st.button("🎲 Run Study", use_container_width=True):
+    t_crit = t.ppf(1 - alpha/2, df)
 
-    if stop_early:
-        while True:
-            p, g1, g2, effect = run_experiment()
-            st.session_state.runs += 1
-            st.session_state.history.append(p)
-            if p < alpha:
-                st.session_state.significant += 1
-                break
-    else:
-        p, g1, g2, effect = run_experiment()
-        st.session_state.runs += 1
-        st.session_state.history.append(p)
-        if p < alpha:
-            st.session_state.significant += 1
+    lower = diff - t_crit * se
+    upper = diff + t_crit * se
 
-    # RESULT DISPLAY
-    if p < alpha:
-        st.success(f"🎉 SIGNIFICANT! p = {p:.4f}")
-    else:
-        st.info(f"Not significant. p = {p:.4f}")
+    return diff, lower, upper, p_value
 
-    st.write(f"Effect size (mean difference): {effect:.3f}")
+# ---------------- One Study ----------------
+if mode == "One study":
 
-    # DATA PLOT
-    fig, ax = plt.subplots()
-    ax.boxplot([g1, g2], labels=["Group 1", "Group 2"])
-    ax.set_title("Simulated Data (No True Difference)")
-    st.pyplot(fig)
+    if st.button("Run a study"):
+        diff, lower, upper, p = run_study(sample_size, true_effect)
 
-# ---------------------------
-# SUMMARY
-# ---------------------------
-st.write("---")
+        col1, col2 = st.columns(2)
 
-runs = st.session_state.runs
-sig = st.session_state.significant
+        # Plot CI
+        with col1:
+            fig, ax = plt.subplots()
 
-if runs > 0:
-    st.subheader("Results so far")
-    st.write(f"Runs: {runs}")
-    st.write(f"Significant results: {sig}")
-    st.write(f"Proportion significant: {sig/runs:.3f}")
-    st.caption("Expected under the null ≈ alpha")
+            ax.plot([lower, upper], [0, 0], linewidth=3)
+            ax.plot(diff, 0, marker="o")
 
-# ---------------------------
-# HISTORY DOTS
-# ---------------------------
-if st.session_state.history:
-    st.subheader("Recent runs")
+            ax.axvline(0, linestyle="--", linewidth=2, label="0 (no difference)")
 
-    last = st.session_state.history[-50:]
-    cols = st.columns(len(last))
+            ax.set_yticks([])
+            ax.set_title("Confidence Interval")
+            ax.set_xlabel("Estimated difference")
 
-    for i, pval in enumerate(last):
-        if pval < alpha:
-            cols[i].markdown("🟢")
+            ax.legend()
+            st.pyplot(fig)
+
+        # Numbers
+        with col2:
+            st.subheader("Results")
+
+            st.write(f"Estimate: {diff:.3f}")
+            st.write(f"{confidence_level}% CI: [{lower:.3f}, {upper:.3f}]")
+            st.write(f"p-value: {p:.4f}")
+
+            if lower > 0 or upper < 0:
+                st.success("CI excludes 0 → p < alpha → statistically significant")
+            else:
+                st.info("CI includes 0 → p ≥ alpha → not significant")
+
+# ---------------- Many Studies ----------------
+else:
+
+    n_sim = st.sidebar.slider("Number of studies", 20, 300, 100)
+
+    if st.button("Run many studies"):
+
+        results = []
+
+        for i in range(n_sim):
+            diff, lower, upper, p = run_study(sample_size, true_effect)
+
+            miss = (lower > 0) or (upper < 0)
+
+            results.append((diff, lower, upper, p, miss))
+
+        misses = sum(r[4] for r in results)
+        percent = misses / n_sim * 100
+
+        if true_effect == 0:
+            st.write(f"Expected false positives ≈ {100 - confidence_level}%")
         else:
-            cols[i].markdown("⚪")
+            st.write("Now we are detecting a real effect.")
 
-# ---------------------------
-# P-VALUE DISTRIBUTION (KEY FEATURE)
-# ---------------------------
-if len(st.session_state.history) > 5:
+        st.write(f"Observed: {misses}/{n_sim} = {percent:.1f}% significant")
 
-    st.subheader("Distribution of p-values")
+        # Plot
+        fig, ax = plt.subplots(figsize=(10, 10))
 
-    fig, ax = plt.subplots()
+        for i, r in enumerate(results):
+            diff, lower, upper, p, miss = r
 
-    ax.hist(
-        st.session_state.history,
-        bins=20,
-        range=(0, 1)
-    )
+            if miss:
+                ax.plot([lower, upper], [i, i], linewidth=2.5)
+                ax.plot(diff, i, marker="o")
+            else:
+                ax.plot([lower, upper], [i, i], linewidth=1)
+                ax.plot(diff, i, marker="o", markersize=3)
 
-    ax.axvline(alpha, linestyle="--")
-    ax.set_xlim(0, 1)
-    ax.set_xlabel("p-value")
-    ax.set_ylabel("Frequency")
-    ax.set_title("Under the null, p-values are uniform")
+        ax.axvline(0, linestyle="--", linewidth=2)
 
-    st.pyplot(fig)
+        ax.set_xlabel("Estimated difference")
+        ax.set_ylabel("Study")
+        ax.set_title(f"{confidence_level}% Confidence Intervals")
 
-    st.caption(
-        "Flat = no real effect. The left tail (< alpha) is just random chance."
-    )
+        ax.grid(True, alpha=0.3)
 
-    st.write(
-        "If the bars aren't flat, something real might be happening. "
-        "If they are flat, you're just mining noise."
-    )
+        st.pyplot(fig)
 
-# ---------------------------
-# FINAL MESSAGE
-# ---------------------------
-if runs >= 20:
-    st.warning(
-        f"You've found {sig} 'significant' results.\n\n"
-        "All of them came from data with NO real effect."
-    )
+        st.subheader("What you're seeing")
+
+        st.write("""
+Each line is a study.
+
+When the interval misses 0, the result is “statistically significant” (p < alpha).
+
+When the true effect is 0, these are false positives — and they happen about 1 in 20 times for a 95% CI.
+""")
