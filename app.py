@@ -96,19 +96,15 @@ if st.button("🎲 Run Study", use_container_width=True):
         if p < alpha:
             st.session_state.significant += 1
 
-    # ---------------------------
-    # RESULT DISPLAY (SLOT MACHINE)
-    # ---------------------------
+    # RESULT DISPLAY (slot machine)
     slot = st.empty()
     symbols = ["🍒", "🍋", "🔔", "⭐", "🍊", "💎"]
 
-    # animation
     for i in range(6):
         spin = np.random.choice(symbols, 3)
         slot.markdown(f"# {' '.join(spin)}")
         time.sleep(0.02)
 
-    # final result
     if p < alpha:
         final = ["🍒", "🍒", "🍒"]
         slot.markdown(f"# {' '.join(final)}")
@@ -125,7 +121,7 @@ if st.button("🎲 Run Study", use_container_width=True):
 
     st.write(f"Effect size (mean difference): {effect:.3f}")
 
-    # DATA PLOT (unchanged)
+    # DATA PLOT
     fig, ax = plt.subplots()
     ax.boxplot([g1, g2], labels=["Group 1", "Group 2"])
     ax.set_title("Simulated Data (No True Difference)")
@@ -161,12 +157,18 @@ if st.session_state.history:
         else:
             cols[i].markdown("⚪")
 
+    if multi_outcomes:
+        st.caption("Each run actually tested 5 outcomes and kept the smallest p-value.")
+
 # ---------------------------
 # P-VALUE DISTRIBUTION
 # ---------------------------
 if len(st.session_state.history) > 5:
 
     st.subheader("Distribution of p-values")
+
+    if multi_outcomes:
+        st.caption("These are biased toward smaller p-values because multiple outcomes are tested.")
 
     fig, ax = plt.subplots()
 
