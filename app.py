@@ -45,8 +45,6 @@ def simulate_once(n):
 
 def run_experiment():
     g1, g2 = simulate_once(n)
-    g1 = maybe_drop_outliers(g1)
-    g2 = maybe_drop_outliers(g2)
 
     if len(g1) < 3 or len(g2) < 3:
         return run_experiment()
