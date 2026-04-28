@@ -81,11 +81,10 @@ def spin(is_sig):
     symbols = ["🍒", "🍋", "🔔", "⭐", "🍊", "💎"]
 
     # animation
-    for i in range(12):
+    for i in range(5):
         s = np.random.choice(symbols, 3)
         box.markdown(f"# {' '.join(s)}")
-        time.sleep(0.05 + i*0.02)
-
+        time.sleep(0.015)
     # final result
     if is_sig:
         final = ["🍒","🍒","🍒"]
