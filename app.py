@@ -124,6 +124,9 @@ if runs > 0:
     st.write(f"Proportion significant: {sig/runs:.3f}")
     st.caption("Expected under the null ≈ alpha")
 
+runs = st.session_state.runs
+sig = st.session_state.significant
+
 # ---------------------------
 # HISTORY DOTS
 # ---------------------------
