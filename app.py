@@ -2,6 +2,7 @@ import streamlit as st
 import numpy as np
 from scipy.stats import ttest_ind
 import matplotlib.pyplot as plt
+import time
 
 # ---------------------------
 # PAGE SETUP
@@ -97,25 +98,53 @@ if st.button("🎲 Run Study", use_container_width=True):
         if p < alpha:
             st.session_state.significant += 1
 
+
+
+if p < alpha:
+    st.markdown(
+        "<h1 style='text-align: center;'>⭐ ⭐ ⭐</h1>",
+        unsafe_allow_html=True
+    )
+else:
+    reel = np.random.choice(fruits, 3, replace=True)
+    st.markdown(
+        f"<h1 style='text-align: center;'>{reel[0]} {reel[1]} {reel[2]}</h1>",
+        unsafe_allow_html=True
+    )
+    
     # ---------------------------
     # SLOT MACHINE DISPLAY (NEW)
     # ---------------------------
+
+    # ---------------------------
+    # SLOT MACHINE DISPLAY WITH SPIN
+    # ---------------------------
     st.write("### 🎰 Result")
 
+    slot_placeholder = st.empty()
+
+    # fake spinning animation
+    for _ in range(10):
+        reel = np.random.choice(fruits, 3, replace=True)
+        slot_placeholder.markdown(
+            f"<h1 style='text-align: center;'>{reel[0]} {reel[1]} {reel[2]}</h1>",
+            unsafe_allow_html=True
+        )
+        time.sleep(0.08)
+
+    # final result
     if p < alpha:
-        # Jackpot
-        st.markdown(
+        slot_placeholder.markdown(
             "<h1 style='text-align: center;'>⭐ ⭐ ⭐</h1>",
             unsafe_allow_html=True
         )
     else:
-        # Random fruit (non-matching)
         reel = np.random.choice(fruits, 3, replace=True)
-        st.markdown(
+        slot_placeholder.markdown(
             f"<h1 style='text-align: center;'>{reel[0]} {reel[1]} {reel[2]}</h1>",
             unsafe_allow_html=True
         )
-
+    
     # ---------------------------
     # RESULT TEXT
     # ---------------------------
