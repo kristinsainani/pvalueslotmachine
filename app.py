@@ -1,9 +1,7 @@
-
 import streamlit as st
 import numpy as np
 from scipy.stats import ttest_ind
 import matplotlib.pyplot as plt
-import time
 
 # ---------------------------
 # PAGE SETUP
@@ -82,6 +80,8 @@ def run_experiment():
 # ---------------------------
 if st.button("🎲 Run Study", use_container_width=True):
 
+    fruits = ["🍒", "🍋", "🍊", "🍇", "🍉"]
+
     if stop_early:
         while True:
             p, g1, g2, effect = run_experiment()
@@ -98,41 +98,71 @@ if st.button("🎲 Run Study", use_container_width=True):
             st.session_state.significant += 1
 
     # ---------------------------
-    # RESULT DISPLAY (ONLY CHANGE)
+    # SLOT MACHINE DISPLAY (NEW)
     # ---------------------------
-    slot = st.empty()
-    symbols = ["🍒", "🍋", "🔔", "⭐", "🍊", "💎"]
-
-    for i in range(6):
-        spin = np.random.choice(symbols, 3)
-        slot.markdown(f"# {' '.join(spin)}")
-        time.sleep(0.02)
+    st.write("### 🎰 Result")
 
     if p < alpha:
-        final = ["🍒", "🍒", "🍒"]
-        slot.markdown(f"# {' '.join(final)}")
+        # Jackpot
+        st.markdown(
+            "<h1 style='text-align: center;'>⭐ ⭐ ⭐</h1>",
+            unsafe_allow_html=True
+        )
+    else:
+        # Random fruit (non-matching)
+        reel = np.random.choice(fruits, 3, replace=True)
+        st.markdown(
+            f"<h1 style='text-align: center;'>{reel[0]} {reel[1]} {reel[2]}</h1>",
+            unsafe_allow_html=True
+        )
+
+    # ---------------------------
+    # RESULT TEXT
+    # ---------------------------
+    if p < alpha:
         st.success(f"🎉 SIGNIFICANT! p = {p:.4f}")
     else:
-        s1 = np.random.choice(symbols)
-        s2 = np.random.choice([s for s in symbols if s != s1])
-        s3 = np.random.choice(symbols)
-        final = [s1, s2, s3]
-
-        slot.markdown(f"# {' '.join(final)}")
         st.info(f"Not significant. p = {p:.4f}")
 
     st.write(f"Effect size (mean difference): {effect:.3f}")
 
-    # ---------------------------
-    # DATA PLOT (UNCHANGED)
-    # ---------------------------
+    # Plot data
+    fig, ax = plt.subplots()
+    ax.boxplot([g1, g2], labels=["Group 1", "Group 2"])
+    ax.set_title("Simulated Data (No True Difference)")
+    st.pyplot(fig)
+
+    if stop_early:
+        while True:
+            p, g1, g2, effect = run_experiment()
+            st.session_state.runs += 1
+            st.session_state.history.append(p)
+            if p < alpha:
+                st.session_state.significant += 1
+                break
+    else:
+        p, g1, g2, effect = run_experiment()
+        st.session_state.runs += 1
+        st.session_state.history.append(p)
+        if p < alpha:
+            st.session_state.significant += 1
+
+    # RESULT DISPLAY
+    if p < alpha:
+        st.success(f"🎉 SIGNIFICANT! p = {p:.4f}")
+    else:
+        st.info(f"Not significant. p = {p:.4f}")
+
+    st.write(f"Effect size (mean difference): {effect:.3f}")
+
+    # DATA PLOT
     fig, ax = plt.subplots()
     ax.boxplot([g1, g2], labels=["Group 1", "Group 2"])
     ax.set_title("Simulated Data (No True Difference)")
     st.pyplot(fig)
 
 # ---------------------------
-# SUMMARY (UNCHANGED)
+# SUMMARY
 # ---------------------------
 st.write("---")
 
@@ -147,7 +177,7 @@ if runs > 0:
     st.caption("Expected under the null ≈ alpha")
 
 # ---------------------------
-# HISTORY DOTS (UNCHANGED)
+# HISTORY DOTS
 # ---------------------------
 if st.session_state.history:
     st.subheader("Recent runs")
@@ -162,7 +192,7 @@ if st.session_state.history:
             cols[i].markdown("⚪")
 
 # ---------------------------
-# P-VALUE DISTRIBUTION (UNCHANGED)
+# P-VALUE DISTRIBUTION (KEY FEATURE)
 # ---------------------------
 if len(st.session_state.history) > 5:
 
@@ -194,7 +224,7 @@ if len(st.session_state.history) > 5:
     )
 
 # ---------------------------
-# FINAL MESSAGE (UNCHANGED)
+# FINAL MESSAGE
 # ---------------------------
 if runs >= 20:
     st.warning(
