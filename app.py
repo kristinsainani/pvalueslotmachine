@@ -30,8 +30,6 @@ st.sidebar.header("Settings")
 n = st.sidebar.slider("Sample size per group", 5, 200, 30)
 alpha = st.sidebar.selectbox("Significance level (alpha)", [0.05, 0.01])
 
-stop_early = 0
-drop_outliers = 0
 
 if st.sidebar.button("Reset"):
     st.session_state.runs = 0
@@ -45,27 +43,16 @@ if st.sidebar.button("Reset"):
 def simulate_once(n):
     return np.random.normal(0,1,n), np.random.normal(0,1,n)
 
-def maybe_drop_outliers(x):
-    if not drop_outliers:
-        return x
-    z = (x - np.mean(x)) / np.std(x)
-    return x[np.abs(z) < 2.5]
-
 def run_experiment():
-    def compute():
-        g1, g2 = simulate_once(n)
-        g1 = maybe_drop_outliers(g1)
-        g2 = maybe_drop_outliers(g2)
+    g1, g2 = simulate_once(n)
+    g1 = maybe_drop_outliers(g1)
+    g2 = maybe_drop_outliers(g2)
 
-        if len(g1) < 3 or len(g2) < 3:
-            return compute()
+    if len(g1) < 3 or len(g2) < 3:
+        return run_experiment()
 
-        stat, p = ttest_ind(g1, g2, equal_var=False)
-        return p, g1, g2, np.mean(g1) - np.mean(g2)
-
-    if multi_outcomes:
-        return min([compute() for _ in range(5)], key=lambda x: x[0])
-    return compute()
+    stat, p = ttest_ind(g1, g2, equal_var=False)
+    return p, g1, g2, np.mean(g1) - np.mean(g2)
 
 # ---------------------------
 # RUN BUTTON
