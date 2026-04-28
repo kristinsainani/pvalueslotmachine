@@ -30,9 +30,8 @@ st.sidebar.header("Settings")
 n = st.sidebar.slider("Sample size per group", 5, 200, 30)
 alpha = st.sidebar.selectbox("Significance level (alpha)", [0.05, 0.01])
 
-multi_outcomes = st.sidebar.checkbox("Try multiple outcomes (5 variables)")
-stop_early = st.sidebar.checkbox("Keep running until significant")
-drop_outliers = st.sidebar.checkbox("Drop outliers (|z| > 2.5)")
+stop_early = 0
+drop_outliers = 0
 
 if st.sidebar.button("Reset"):
     st.session_state.runs = 0
