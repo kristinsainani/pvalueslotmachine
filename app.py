@@ -72,11 +72,6 @@ if st.button("🎲 Run Study", use_container_width=True):
     # ---------------------------
     st.write("### 🎰 Result")
 
-    # ---------------------------
-    # SLOT MACHINE (SPIN)
-    # ---------------------------
-    st.write("### 🎰 Result")
-
     slot = st.empty()
     final_reel = None
 
