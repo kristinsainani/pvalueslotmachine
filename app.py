@@ -71,7 +71,7 @@ def run_experiment():
 # ---------------------------
 # RUN BUTTON
 # ---------------------------
-fruits = ["🍒", "🍋", "🍊", "🍇", "🍉"]
+fruits = ["🍒", "🍋", "🍊", "🍇", "🍉", "⭐"]
 
 if st.button("🎲 Run Study", use_container_width=True):
 
