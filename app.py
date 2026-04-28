@@ -100,7 +100,7 @@ if st.button("🎲 Run Study", use_container_width=True):
 
 
 
-if p < alpha:
+if 'p' in locals() and p < alpha:
     st.markdown(
         "<h1 style='text-align: center;'>⭐ ⭐ ⭐</h1>",
         unsafe_allow_html=True
