@@ -137,43 +137,68 @@ if st.button("🎲 Run Study", use_container_width=True):
 # ---------------------------
 st.write("---")
 
-if st.session_state.runs > 0:
+runs = st.session_state.runs
+sig = st.session_state.significant
+
+if runs > 0:
     st.subheader("Results so far")
-    st.write(f"Runs: {st.session_state.runs}")
-    st.write(f"Significant: {st.session_state.significant}")
-    st.write(f"Proportion: {st.session_state.significant / st.session_state.runs:.3f}")
+    st.write(f"Runs: {runs}")
+    st.write(f"Significant results: {sig}")
+    st.write(f"Proportion significant: {sig/runs:.3f}")
+    st.caption("Expected under the null ≈ alpha")
 
 # ---------------------------
 # HISTORY DOTS
 # ---------------------------
 if st.session_state.history:
     st.subheader("Recent runs")
-    cols = st.columns(len(st.session_state.history[-50:]))
 
-    for i, pval in enumerate(st.session_state.history[-50:]):
-        cols[i].markdown("🟢" if pval < alpha else "⚪")
+    last = st.session_state.history[-50:]
+    cols = st.columns(len(last))
+
+    for i, pval in enumerate(last):
+        if pval < alpha:
+            cols[i].markdown("🟢")
+        else:
+            cols[i].markdown("⚪")
 
 # ---------------------------
-# HISTOGRAM (KEY FEATURE)
+# P-VALUE DISTRIBUTION (KEY FEATURE)
 # ---------------------------
 if len(st.session_state.history) > 5:
 
     st.subheader("Distribution of p-values")
 
     fig, ax = plt.subplots()
-    ax.hist(st.session_state.history, bins=20, range=(0,1))
+
+    ax.hist(
+        st.session_state.history,
+        bins=20,
+        range=(0, 1)
+    )
+
     ax.axvline(alpha, linestyle="--")
+    ax.set_xlim(0, 1)
+    ax.set_xlabel("p-value")
+    ax.set_ylabel("Frequency")
     ax.set_title("Under the null, p-values are uniform")
 
     st.pyplot(fig)
 
-    st.caption("Flat = no real effect. Left tail is just chance.")
+    st.caption(
+        "Flat = no real effect. The left tail (< alpha) is just random chance."
+    )
+
+    st.write(
+        "If the bars aren't flat, something real might be happening. "
+        "If they are flat, you're just mining noise."
+    )
 
 # ---------------------------
 # FINAL MESSAGE
 # ---------------------------
-if st.session_state.runs >= 20:
+if runs >= 20:
     st.warning(
-        f"You've found {st.session_state.significant} significant results.\n\n"
-        "All came from pure noise."
+        f"You've found {sig} 'significant' results.\n\n"
+        "All of them came from data with NO real effect."
     )
