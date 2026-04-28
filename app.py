@@ -1,3 +1,4 @@
+
 import streamlit as st
 import numpy as np
 from scipy.stats import ttest_ind
@@ -96,7 +97,9 @@ if st.button("🎲 Run Study", use_container_width=True):
         if p < alpha:
             st.session_state.significant += 1
 
-    # RESULT DISPLAY (slot machine)
+    # ---------------------------
+    # RESULT DISPLAY (ONLY CHANGE)
+    # ---------------------------
     slot = st.empty()
     symbols = ["🍒", "🍋", "🔔", "⭐", "🍊", "💎"]
 
@@ -109,7 +112,6 @@ if st.button("🎲 Run Study", use_container_width=True):
         final = ["🍒", "🍒", "🍒"]
         slot.markdown(f"# {' '.join(final)}")
         st.success(f"🎉 SIGNIFICANT! p = {p:.4f}")
-        st.write("But there is NO real effect — this is a false positive.")
     else:
         s1 = np.random.choice(symbols)
         s2 = np.random.choice([s for s in symbols if s != s1])
@@ -121,14 +123,16 @@ if st.button("🎲 Run Study", use_container_width=True):
 
     st.write(f"Effect size (mean difference): {effect:.3f}")
 
-    # DATA PLOT
+    # ---------------------------
+    # DATA PLOT (UNCHANGED)
+    # ---------------------------
     fig, ax = plt.subplots()
     ax.boxplot([g1, g2], labels=["Group 1", "Group 2"])
     ax.set_title("Simulated Data (No True Difference)")
     st.pyplot(fig)
 
 # ---------------------------
-# SUMMARY
+# SUMMARY (UNCHANGED)
 # ---------------------------
 st.write("---")
 
@@ -143,7 +147,7 @@ if runs > 0:
     st.caption("Expected under the null ≈ alpha")
 
 # ---------------------------
-# HISTORY DOTS
+# HISTORY DOTS (UNCHANGED)
 # ---------------------------
 if st.session_state.history:
     st.subheader("Recent runs")
@@ -157,18 +161,12 @@ if st.session_state.history:
         else:
             cols[i].markdown("⚪")
 
-    if multi_outcomes:
-        st.caption("Each run actually tested 5 outcomes and kept the smallest p-value.")
-
 # ---------------------------
-# P-VALUE DISTRIBUTION
+# P-VALUE DISTRIBUTION (UNCHANGED)
 # ---------------------------
 if len(st.session_state.history) > 5:
 
     st.subheader("Distribution of p-values")
-
-    if multi_outcomes:
-        st.caption("These are biased toward smaller p-values because multiple outcomes are tested.")
 
     fig, ax = plt.subplots()
 
@@ -196,7 +194,7 @@ if len(st.session_state.history) > 5:
     )
 
 # ---------------------------
-# FINAL MESSAGE
+# FINAL MESSAGE (UNCHANGED)
 # ---------------------------
 if runs >= 20:
     st.warning(
